@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>历史日志</title>
+</head>
+<body>
+<div id="fileList"></div>
+</body>
+<script th:src="@{jquery.min.js}"></script>
+<script type="text/javascript">
+    $(function() {
+        getLogs('');
+    });
+
+    var getLogs = function(parent) {
+        var grandparent;
+        if (parent === '' || parent.indexOf("/") == 0) {
+            grandparent = '';
+        } else {
+            grandparent = parent.substr(0, parent.indexOf("/"));
+        }
+        $.ajax({
+            url: '/logs' + (!parent ? "" : "?parent=" + parent),
+            success: function(data) {
+                if (data.count > 0) {
+                    var links = [];
+                    links.push('<a href="javascript:void(0)" data="' + grandparent + '" type="dir">..</a><br/>');
+                    /* <![CDATA[ */
+                    for (var i = 0; i < data.count; i += 1) {
+                        if (parent) {
+                            if (data.data[i].type === "dir") {
+                                links.push("<a href='javascript:void(0)' data='" + data.data[i].name);
+                            } else {
+                                links.push("<a href='/fileDownload?fileName=" + parent + "/" + data.data[i].name);
+                            }
+                        } else {
+                            links.push("<a href='javascript:void(0)' data='" + data.data[i].name);
+                        }
+
+                        links.push("' type='");
+                        links.push(data.data[i].type);
+                        links.push("'>");
+                        links.push(data.data[i].name);
+                        links.push("</a><br/>");
+                    }
+                    /* ]]> */
+
+                    $('#fileList').html(links.join(''));
+                    $('a').click(function(e) {
+                        if ($(e.target).attr("type") === "dir") {
+                            getLogs($(e.target).attr("data"));
+                        } else {
+                            // 下载文件
+                            <!--getLogFile($(e.target).attr("data"));-->
+                        }
+                    });
+                }
+            }
+        })
+    }
+
+    <!--var getLogFile = function(logFile) {-->
+        <!--console.log("ajaxDownloadSynchronized");-->
+        <!--var url = "/fileDownload?fileName=" + logFile;-->
+        <!--var fileName = logFile.substr(logFile.indexOf("/"));-->
+        <!--var form = $("<form></form>").attr("action", url).attr("method", "post");-->
+        <!-- form.append($("<input></input>").attr("type", "hidden").attr("name", "fileName").attr("value", fileName));-->
+        <!--form.appendTo('body').submit().remove();-->
+    <!--}-->
+
+</script>
+</html>

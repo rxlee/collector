@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"/>
+    <title>实时码流</title>
+</head>
+<body onload="connect()" onunload="disconnect()">
+<noscript><h2 style="color: #ff0000">貌似你的浏览器不支持websocket</h2></noscript>
+<div>
+    <div style="margin-top: 10px;">
+        <label>请选择要查看的通道</label>
+        <select id="dtus" style="width: 300px; margin-left : 20px;"><option value="all">global</option></select>
+        <button id="connect" onclick="connectDtu();" style="margin-left : 20px;">连接</button>
+        <button id="disconnect" disabled="disabled" onclick="disConnectDtu();" style="margin-left : 20px;">断开</button>
+    </div>
+    <div id="conversationDiv" style="border: 1px solid black; width: 100%; height: 800px; visibility: hidden; margin-top: 10px; overflow: auto;">
+        <p id="response"></p>
+    </div>
+</div>
+<script th:src="@{sockjs.min.js}"></script>
+<script th:src="@{stomp.min.js}"></script>
+<script th:src="@{jquery.min.js}"></script>
+<script type="text/javascript">
+
+    var stompClient = null;
+    var messages = [];
+
+    var setConnected = function(connected) {
+        if (connected) {
+            $('#conversationDiv').css('visibility', 'visible');
+        } else {
+            $('#conversationDiv').css('visibility', 'hidden');
+        }
+        $('#response').html();
+    }
+
+    var connect = function() {
+        var socket = new SockJS('/logEndpoint');            //链接SockJS 的endpoint 名称为"/logEndpoint"
+        stompClient = Stomp.over(socket);                   //使用stomp子协议的WebSocket 客户端
+        stompClient.connect({}, function(frame) {           //链接Web Socket的服务端。
+            setConnected(true);
+            console.log('Connected: ' + frame);
+            stompClient.subscribe('/topic/getResponse', function(response){ //订阅/topic/getResponse 目标发送的消息。这个是在控制器的@SendTo中定义的。
+                showResponse(response.body);
+            });
+        });
+    }
+
+
+    var disconnect = function() {
+        disConnectDtu();
+
+        if (stompClient != null) {
+            stompClient.disconnect();
+        }
+
+        setConnected(false);
+        console.log("Disconnected");
+    }
+
+    var connectDtu = function() {
+        var dtuSn = $('#dtus').val();
+        $('#response').html();
+        messages = [];
+        //通过stompClient.send 向/welcome 目标 发送消息,这个是在控制器的@messageMapping 中定义的。
+        stompClient.send("/bindDtu", {}, JSON.stringify({
+            sn: dtuSn
+        }));
+
+        $('#connect').attr('disabled', true);
+        $('#disconnect').attr('disabled', false);
+    }
+
+    var disConnectDtu = function() {
+        var dtuSn = $('#dtus').val();
+
+        stompClient.send("/unbindDtu", {}, JSON.stringify({sn: dtuSn}));
+
+        $('#connect').attr('disabled', false);
+        $('#disconnect').attr('disabled', true);
+    }
+
+    var showResponse = function(message) {
+        var jsonBody = JSON.parse(message);
+        var tmpMsg = [];
+        if (jsonBody.deviceSn) {
+            tmpMsg.push("Device[" + jsonBody.deviceSn + "]");
+        }
+
+        if (jsonBody.action) {
+            if (jsonBody.action === "RECV") {
+                tmpMsg.push("received");
+            } else {
+                tmpMsg.push("send");
+            }
+        }
+
+        if (jsonBody.ipAddress) {
+            if (jsonBody.action === "RECV") {
+                tmpMsg.push("from");
+            } else {
+                tmpMsg.push("to");
+            }
+
+            /* <![CDATA[ */
+            tmpMsg.push("<" + jsonBody.ipAddress + ">:<" + jsonBody.port + ">");
+            /* ]]> */
+        }
+
+        tmpMsg.push(jsonBody.time+"|");  //实时时间
+        tmpMsg.push(jsonBody.content);
+
+        messages.unshift(tmpMsg.join(" "));
+        if (messages.length > 100) {
+            messages.pop();
+        }
+
+        var response = $("#response");
+        response.html(messages.join("<br/>"));
+    }
+
+    $(function() {
+        $.ajax({
+            url: '/dtus',
+            success: function(data) {
+                if (data.count > 0) {
+                    var options = [];
+                    /* <![CDATA[ */
+                    for (var i = 0; i < data.count; i += 1) {
+
+                        options.push("<option value='" + data.data[i].sn + "'>");
+                        options.push(data.data[i].sn);
+                        options.push("</option>");
+                    }
+                    /* ]]> */
+
+                    $('#dtus').append(options.join(''));
+                }
+            }
+        })
+    });
+</script>
+</body>
+</html>

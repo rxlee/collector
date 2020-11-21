@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.kkwl.collector.dao.Configuration">
+    <select id="getStationCount" resultType="Integer">
+        SELECT COUNT(*) FROM station
+    </select>
+
+    <select id="getDtus" parameterType="java.util.Map" resultMap="dtuResultMap">
+        SELECT A.*, B.ip_address AS collector_ip, B.port AS collector_port
+        FROM monitor_channel AS A
+        LEFT JOIN monitor_server AS B ON A.collector_id = B.id
+        WHERE FALSE
+        <if test="ip_address != null and port != null">
+            OR (B.ip_address = #{ip_address} AND B.port = #{port} AND (A.access_type = 'DIAL' OR A.access_type = 'FIXEDIP'))
+        </if>
+        <if test="parent_index != null">
+            OR A.parent_index = #{parent_index}
+        </if>
+        <if test="access_type != null">
+            OR A.access_type = #{access_type}
+        </if>
+        <if test="collector_dtu_sns != null">
+            OR A.sn in
+            <foreach collection="collector_dtu_sns" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <resultMap id="dtuResultMap" type="com.kkwl.collector.models.CollectorDtu">
+        <id property="sn" column="sn"/>
+        <result property="name" column="name"/>
+        <result property="ipAddress" column="ip_address"/>
+        <result property="port" column="port"/>
+        <result property="identifier" column="identifier"/>
+        <result property="accessType" column="access_type"/>
+        <result property="timeInterval" column="time_interval"/>
+        <result property="parentIndex" column="parent_index"/>
+        <result property="shouldReportConnectionAlarm" column="report_connection_alarm"/>
+        <result property="connectionTimeoutDuration" column="connection_timeout_duration"/>
+        <result property="collectorIpAddress" column="collector_ip"/>
+        <result property="collectorPort" column="collector_port"/>
+        <result property="status" column="status"/>
+        <result property="lastOfflineReportId" column="last_offline_report_id"/>
+        <result property="lastOfflineReportTime" column="last_offline_report_time"/>
+    </resultMap>
+
+    <select id="getDevices" parameterType="java.util.Map" resultMap="getewayResultMap">
+        SELECT A.*, C.sn AS `device_sn`, C.name AS `device_name`, C.`report_connection_alarm`,
+        C.`status`, C.`last_offline_report_id`, C.`last_offline_report_time`,
+        C.`connection_timeout_duration`, C.address, B.access_type AS access_type,
+        C.is_device_being_used, D.ip_address AS collector_ip, D.port AS collector_port,
+        E.name AS section_name, E.start AS section_start, E.length AS section_length, E.area AS section_type
+        FROM monitor_route AS A
+        LEFT JOIN monitor_channel AS B ON A.`dtu_sn` = B.`sn`
+        LEFT JOIN monitor_device AS C ON A.`sn` = C.`gateway_sn`
+        LEFT JOIN monitor_server AS D ON B.collector_id = D.id
+        LEFT JOIN monitor_register AS E ON C.sn = E.`collector_device_sn`
+        WHERE FALSE
+        <if test="parent_index != null">
+            OR C.parent_index = #{parent_index}
+        </if>
+        <if test="collector_dtu_sns != null">
+            OR A.dtu_sn IN
+            <foreach collection="collector_dtu_sns" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="collector_device_sns != null">
+            OR C.sn IN
+            <foreach collection="collector_device_sns" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+    </select>
+    <resultMap id="getewayResultMap" type="com.kkwl.collector.models.CollectorDevice">
+        <id property="sn" column="device_sn"/>
+        <result property="dtuSn" column="dtu_sn"/>
+        <result property="dtuAccessType" column="access_type"/>
+        <result property="name" column="device_name"/>
+        <result property="protocolType" column="protocol_type"/>
+        <result property="protocolParams" column="protocol_params"/>
+        <result property="parentIndex" column="parent_index"/>
+        <result property="reportConnectionAlarm" column="report_connection_alarm"/>
+        <result property="connectionTimeoutDuration" column="connection_timeout_duration"/>
+        <result property="deviceBeingUsed" column="is_device_being_used"/>
+        <result property="address" column="address"/>
+        <result property="collectorIpAddress" column="collector_ip"/>
+        <result property="collectorPort" column="collector_port"/>
+        <result property="status" column="status"/>
+        <result property="lastOfflineReportId" column="last_offline_report_id"/>
+        <result property="lastOfflineReportTime" column="last_offline_report_time"/>
+        <collection property="dataSections" javaType="ArrayList" ofType="com.kkwl.collector.models.DataSection">
+            <constructor>
+                <arg column="section_name" javaType="String" />
+                <arg column="section_start" javaType="Integer" />
+                <arg column="section_length" javaType="Integer" />
+                <arg column="section_type" javaType="String" />
+            </constructor>
+        </collection>
+    </resultMap>
+
+    <select id="getDeviceRegisterMapList" parameterType="java.util.Map" resultMap="deviceRegisterMap">
+        SELECT * FROM monitor_register
+        WHERE collector_device_sn IN
+        <foreach collection="collector_device_sns" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+    <resultMap id="deviceRegisterMap" type="com.kkwl.collector.models.CollectorRegisterArea">
+        <id property="id" column="id"/>
+        <result property="collectorDeviceSn" column="collector_device_sn"/>
+        <result property="name" column="name"/>
+        <result property="start" column="start"/>
+        <result property="length" column="length"/>
+        <result property="type" column="area"/>
+    </resultMap>
+
+    <select id="getDeviceVariables" parameterType="java.util.Map" resultMap="deviceVariableResultMap">
+        SELECT A.*, B.gateway_sn, E.id AS trigger_id, E.type_sn AS trigger_type_sn, E.type_parent_index AS trigger_type_parent_index, 
+        E.param_1 AS trigger_param_1, E.param_2 AS trigger_param_2, E.param_3 AS trigger_param_3, E.param_4 AS trigger_param_4, 
+        E.last_report_id AS trigger_last_report_id, E.last_report_time AS trigger_last_report_time 
+        FROM monitor_device_var AS A
+        LEFT JOIN monitor_device AS B ON A.collector_device_sn = B.sn
+        LEFT JOIN alarm_generater AS E ON A.sn = E.`var_sn`
+        WHERE FALSE
+        <if test="parent_index != null">
+            OR A.parent_index = #{parent_index}
+        </if>
+        <if test="parent_indexes != null">
+            OR A.parent_index IN
+            <foreach collection="parent_indexes" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        <if test="collector_device_sns != null">
+            OR A.collector_device_sn IN
+            <foreach collection="collector_device_sns" item="item" index="index" open="(" close=")" separator=",">
+                #{item}
+            </foreach>
+        </if>
+        ORDER BY A.id
+    </select>
+    <resultMap id="deviceVariableResultMap" type="com.kkwl.collector.models.DeviceVariable">
+        <id property="sn" column="sn"/>
+        <result property="deviceSn" column="device_sn"/>
+        <result property="collectorDeviceSn" column="collector_device_sn"/>
+        <result property="name" column="name"/>
+        <result property="type" column="type"/>
+        <result property="dataType" column="data_type"/>
+        <result property="unit" column="unit"/>
+        <result property="registerName" column="register_name"/>
+        <result property="registerIndex" column="register_index"/>
+        <result property="bitPos" column="bit_pos"/>
+        <result property="recordPeriod" column="record_period"/>
+        <result property="recordType" column="record_type"/>
+        <result property="baseValue" column="base_value"/>
+        <result property="initialValue" column="initial_value"/>
+        <result property="coefficient" column="coefficient"/>
+        <result property="lowerLimit" column="lower_limit"/>
+        <result property="moreLowerLimit" column="more_lower_limit"/>
+        <result property="upperLimit" column="upper_limit"/>
+        <result property="moreUpperLimit" column="more_upper_limit"/>
+        <result property="zeroToOneAlarm" column="zero_to_one_alarm"/>
+        <result property="oneToZeroAlarm" column="one_to_zero_alarm"/>
+        <result property="zeroMeaning" column="zero_meaning"/>
+        <result property="oneMeaning" column="one_meaning"/>
+        <result property="alarm" column="alarm"/>
+        <result property="alarmCondition" column="alarm_condition"/>
+        <result property="parentIndex" column="parent_index"/>
+        <result property="expression" column="expression"/>
+        <result property="accumulation" column="accumulation"/>
+        <result property="isOpposit" column="opposit"/>
+        <result property="varCode" column="var_code"/>
+        <result property="rw" column="rw"/>
+        <collection property="eventTriggers" javaType="ArrayList" ofType="com.kkwl.collector.models.EventTrigger">
+            <constructor>
+            	<arg column="trigger_id" javaType="Long"/>
+		        <arg column="trigger_type_sn" javaType="String"/>
+		        <arg column="trigger_type_parent_index" javaType="String"/>
+		        <arg column="trigger_param_1" javaType="String"/>
+		        <arg column="trigger_param_2" javaType="String"/>
+		        <arg column="trigger_param_3" javaType="String"/>
+		        <arg column="trigger_param_4" javaType="String"/>
+		        <arg column="trigger_last_report_id" javaType="String"/>
+		        <arg column="trigger_last_report_time" javaType="java.sql.Timestamp"/>
+            </constructor>
+        </collection>
+    </resultMap>
+    
+    <update id="updateEventTriggerLastReportInfo">
+        UPDATE alarm_generater
+        <set>
+            last_report_id = #{last_report_id},
+            last_report_time = #{last_report_time},
+        </set>
+        WHERE id = #{id}
+    </update>
+
+    <select id="getDeviceStationSns" parameterType="java.util.List" resultType="String">
+        SELECT DISTINCT(station_sn) FROM link_station_to_monitor WHERE device_sn IN
+        <foreach collection="collector_device_sns" item="item" index="index" open="(" close=")" separator=",">
+            #{item}
+        </foreach>
+    </select>
+
+    <select id="getDeviceSnsInStation" parameterType="String" resultType="String">
+        SELECT DISTINCT(device_sn) FROM link_station_to_monitor WHERE station_sn = #{station_sn}
+    </select>
+    
+    <select id="getEventTypes" resultMap="eventTypeResultMap">
+        SELECT * FROM alarm_type
+    </select>
+    <select id="getEventTypesByParentIndex" parameterType="String" resultMap="eventTypeResultMap">
+        SELECT * FROM alarm_type WHERE parent_index = #{parent_index}
+    </select>
+    <resultMap id="eventTypeResultMap" type="com.kkwl.collector.models.EventType">
+        <result property="sn" column="sn"/>
+        <result property="parentIndex" column="parent_index"/>
+        <result property="levelCode" column="level_code"/>
+        <result property="triggerTypeSn" column="trigger_type_sn"/>
+        <result property="triggerDelay" column="trigger_delay"/>
+        <result property="autoCheckDelay" column="auto_check_delay"/>
+    </resultMap>
+
+    <update id="createDayHistoryTable" parameterType="String">
+        CREATE TABLE IF NOT EXISTS ${table_name} (
+        `ONLYNUM` INT NOT NULL AUTO_INCREMENT,
+        `VARIANTNAME` VARCHAR(45) DEFAULT NULL,
+        `TIME` DATETIME DEFAULT NULL,
+        `DATA` DOUBLE DEFAULT NULL,
+        PRIMARY KEY (`ONLYNUM`),
+        KEY ${key} (`VARIANTNAME`, `TIME`)
+        )
+    </update>
+
+    <update id="createMonthHistoryTable" parameterType="String">
+        CREATE TABLE IF NOT EXISTS ${table_name} (
+        `onlynum` INT NOT NULL AUTO_INCREMENT,
+        `variantname` VARCHAR(64),
+        `dayf` INT,
+        `max_value` DOUBLE,
+        `max_value_time` DATETIME DEFAULT NULL,
+        `min_value` DOUBLE,
+        `min_value_time` DATETIME DEFAULT NULL,
+        `average_value` DOUBLE,
+        `count` INT DEFAULT  NULL,
+        `accu_value` DOUBLE,
+        PRIMARY KEY (`onlynum`),
+        KEY ${key} (`variantname`,`dayf`)
+        )
+    </update>
+
+    <insert id="insertRecords" parameterType="java.util.Map">
+        INSERT INTO ${table_name} (VARIANTNAME, TIME, DATA) VALUES
+        <foreach collection="valueMapList" index="index" item="item" separator="," open="" close="">
+            (#{item.VARIANTNAME}, #{item.TIME}, #{item.DATA})
+        </foreach>
+    </insert>
+
+    <select id="getDayValueCount" parameterType="java.util.Map" resultType="Integer">
+        SELECT COUNT(*) FROM ${table_name} WHERE variantname = #{sn} AND dayf = #{day_off}
+    </select>
+
+    <select id="getDayValueMap" parameterType="java.util.Map" resultMap="dayValueMap">
+        SELECT * FROM ${table_name} WHERE dayf = #{day_off}
+        <if test="sn != null">
+            AND variantname=#{sn}
+        </if>
+    </select>
+    <resultMap id="dayValueMap" type="java.util.Map">
+        <id property="onlynum" column="onlynum"/>
+        <result property="variantname" column="variantname"/>
+        <result property="dayf" column="dayf"/>
+        <result property="max_value" column="max_value" javaType="Float"/>
+        <result property="max_value_time" column="max_value_time" javaType="java.sql.Timestamp"/>
+        <result property="min_value" column="min_value" javaType="Float"/>
+        <result property="min_value_time" column="min_value_time" javaType="java.sql.Timestamp"/>
+        <result property="average_value" column="average_value" javaType="Float"/>
+        <result property="count" column="count"/>
+        <result property="accu_value" column="accu_value" javaType="Float"/>
+    </resultMap>
+
+    <select id="getDayValueTableExistDeviceVariableSns" parameterType="java.util.Map" resultType="String">
+        SELECT variantname FROM ${table_name} WHERE dayf = #{day_off}
+    </select>
+
+    <insert id="storeDayValues" parameterType="java.util.Map">
+        INSERT INTO ${table_name} (variantname, dayf, max_value, max_value_time, min_value, min_value_time, average_value, count, accu_value)
+        VALUES
+        <foreach collection="valueMapList" index="index" item="item" separator="," open="" close="">
+            (#{item.variantname}, #{day_off}, #{item.max_value}, #{item.max_value_time}, #{item.min_value},
+            #{item.min_value_time}, #{item.average_value}, #{item.count}, #{item.accu_value})
+        </foreach>
+    </insert>
+
+    <insert id="storeSingleDayValue" parameterType="java.util.Map">
+        INSERT INTO ${table_name} (variantname, dayf, max_value, max_value_time, min_value, min_value_time, average_value, count, accu_value)
+        VALUES (#{variantname}, #{day_off}, #{max_value}, #{max_value_time}, #{min_value},
+                #{min_value_time}, #{average_value}, #{count}, #{accu_value})
+    </insert>
+
+    <update id="updateSingleDayValue" parameterType="java.util.Map">
+        UPDATE ${table_name}
+        <set>
+            max_value = #{max_value},
+            max_value_time = #{max_value_time},
+            min_value = #{min_value},
+            min_value_time = #{min_value_time},
+            average_value = #{average_value},
+            count = #{count},
+            accu_value = #{accu_value}
+        </set>
+        WHERE variantname = #{variantname} AND dayf = #{day_off}
+    </update>
+
+    <update id="updateDayValues" parameterType="java.util.List">
+        <foreach collection="valueMapList" item="item" index="index" open="" close="" separator=";">
+            UPDATE ${table_name}
+            <set>
+                max_value = #{item.max_value},
+                max_value_time = #{item.max_value_time},
+                min_value = #{item.min_value},
+                min_value_time = #{item.min_value_time},
+                average_value = #{item.average_value},
+                count = #{count},
+                accu_value = #{item.accu_value}
+            </set>
+            WHERE variantname = #{item.variantname} AND dayf = #{day_off}
+        </foreach>
+    </update>
+
+    <update id="updateCollectorDtuStatus">
+        UPDATE monitor_channel
+        <set>
+            <if test="offline_time != null">
+                offline_time = #{offline_time},
+            </if>
+            <if test="online_time != null">
+                online_time = #{online_time},
+            </if>
+            <if test="update_time != null">
+                update_time = #{update_time},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="last_offline_report_id != null">
+                last_offline_report_id = #{last_offline_report_id},
+            </if>
+            <if test="last_offline_report_id != null">
+                last_offline_report_time = #{last_offline_report_time}
+            </if>
+        </set>
+        WHERE sn = #{sn}
+    </update>
+
+    <update id="updateCollectorDeviceStatus">
+        UPDATE monitor_device
+        <set>
+            <if test="offline_time != null">
+                offline_time = #{offline_time},
+            </if>
+            <if test="online_time != null">
+                online_time = #{online_time},
+            </if>
+            <if test="update_time != null">
+                update_time = #{update_time},
+            </if>
+            <if test="status != null">
+                status = #{status},
+            </if>
+            <if test="last_offline_report_id != null">
+                last_offline_report_id = #{last_offline_report_id},
+            </if>
+            <if test="last_offline_report_id != null">
+                last_offline_report_time = #{last_offline_report_time}
+            </if>
+        </set>
+        WHERE sn = #{sn}
+    </update>
+
+    <select id="getDeviceOfflineInfo" parameterType="java.util.Map" resultMap="deviceOfflineInfoMap">
+        SELECT offline_time, online_time, status FROM monitor_device WHERE sn = #{sn}
+    </select>
+    <resultMap id="deviceOfflineInfoMap" type="java.util.Map">
+        <result property="online_time" column="online_time"/>
+        <result property="offline_time" column="offline_time"/>
+        <result property="status" column="status"/>
+    </resultMap>
+
+    <insert id="insertUnprocessedData" parameterType="java.util.Map">
+        INSERT INTO unprocessed_data (var_sn, start_time, end_time, data_js)
+        VALUES (#{var_sn}, #{start_time}, #{end_time}, #{data_js})
+    </insert>
+</mapper>
