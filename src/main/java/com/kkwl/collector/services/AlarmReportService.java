@@ -14,7 +14,7 @@
   import org.json.JSONObject;
   import org.slf4j.Logger;
   import org.slf4j.LoggerFactory;
-  import org.springframework.amqp.core.AmqpTemplate;
+//  import org.springframework.amqp.core.AmqpTemplate;
   import org.springframework.beans.factory.annotation.Autowired;
   import org.springframework.beans.factory.annotation.Value;
   import org.springframework.stereotype.Component;
@@ -31,8 +31,8 @@
     @Value("${com.kkwl.collector.amqp.alarm_topic}")
     private String alarmTopicName;
     
-    @Autowired
-    AmqpTemplate amqpTemplate;
+//    @Autowired
+//    AmqpTemplate amqpTemplate;
     
     @Autowired
     Configuration configurationDB;
@@ -64,7 +64,7 @@
       alarmMessageObj.put("param_4", eventTrigger.getParam4());
       
       LogTools.log(logger, logFileName, LogType.INFO, "Alarm report service send alarm : " + alarmMessageObj.toString());
-      this.amqpTemplate.convertAndSend(this.alarmExchangeName, this.alarmTopicName, alarmMessageObj.toString());
+//      this.amqpTemplate.convertAndSend(this.alarmExchangeName, this.alarmTopicName, alarmMessageObj.toString());
     }
   
     

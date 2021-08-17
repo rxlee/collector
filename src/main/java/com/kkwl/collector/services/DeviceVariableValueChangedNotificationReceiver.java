@@ -11,7 +11,7 @@
   import org.json.JSONObject;
   import org.slf4j.Logger;
   import org.slf4j.LoggerFactory;
-  import org.springframework.amqp.rabbit.annotation.RabbitListener;
+//  import org.springframework.amqp.rabbit.annotation.RabbitListener;
   import org.springframework.beans.factory.annotation.Autowired;
   import org.springframework.messaging.handler.annotation.Payload;
   import org.springframework.stereotype.Component;
@@ -25,7 +25,7 @@
     @Autowired
     Configuration configurationDBHandler;
     
-    @RabbitListener(queues = {"#{deviceVariableValueChangedNotificationQueue.name}"})
+//    @RabbitListener(queues = {"#{deviceVariableValueChangedNotificationQueue.name}"})
     public void receiveMessage(@Payload String message) {
       logger.info("Device variable value changed message receiver received : " + message);
       

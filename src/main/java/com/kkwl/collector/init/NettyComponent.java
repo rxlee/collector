@@ -69,7 +69,7 @@
                      logger.error("Netty server error occured when loading data.", e);
                     }
             }
-        //对每个端口，nettyServer处理数据：（激活通道、读通道类容。。。）
+        //对每个端口，nettyServer处理数据：（激活通道、读通道内容。。。）
         GlobalVariables.GLOBAL_SCHEDULED_SERVICE_POOL.execute(new Runnable()
           {
             public void run() {//拨号连接时系统属netty服务端

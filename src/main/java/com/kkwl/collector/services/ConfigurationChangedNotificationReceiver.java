@@ -35,7 +35,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.amqp.rabbit.annotation.*;
+//import org.springframework.amqp.rabbit.annotation.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -69,11 +69,10 @@ public class ConfigurationChangedNotificationReceiver {
 	@Value("${netty.client.reconnect-duration}")
 	private Integer reconnectDuration;
 
-	//@RabbitListener(queues = { "#{configurationChangedNotificationQueue.name}" }) //2019.12.13yc
-	@RabbitHandler    ///
+/*	@RabbitHandler
 	@RabbitListener(bindings = @QueueBinding(value = @Queue(value = "${com.kkwl.collector.amqp.configuration_changed_notification_queue_name}",durable="true"),
 	                exchange = @Exchange(value = "${com.kkwl.collector.amqp.configuration_changed_notification_exchange_name}",type = "topic",durable = "true"),
-	                key = "${com.kkwl.collector.amqp.configuration_changed_notification_routing_key}")) ///2019.12.13yc
+	                key = "${com.kkwl.collector.amqp.configuration_changed_notification_routing_key}"))*/
 	public void receiveMessage(@Payload String message) {
 		logger.info("Notification message receiver received : " + message);
 
