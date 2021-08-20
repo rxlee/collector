@@ -15,9 +15,9 @@
   import org.springframework.core.annotation.Order;
   import org.springframework.stereotype.Component;
   
-  @Component
-  @ConditionalOnProperty(name = {"com.kkwl.collector.runmode"}, havingValue = "mqtt_client")
-  @Order(3)
+//  @Component
+//  @ConditionalOnProperty(name = {"com.kkwl.collector.runmode"}, havingValue = "mqtt_client")
+//  @Order(3)
   public class MqttComponent implements CommandLineRunner {
     private static final Logger logger = LoggerFactory.getLogger(MqttComponent.class);
     
@@ -52,8 +52,3 @@
     }
   }
 
-
-/* Location:              C:\Users\Andy\Desktop\EMS\server-2\kk\collector\collector-0.0.1-SNAPSHOT.jar!\BOOT-INF\classes\com\kkwl\collector\init\MqttComponent.class
- * Java compiler version: 8 (52.0)
- * JD-Core Version:       1.0.7
- */
