@@ -11,7 +11,7 @@
  Target Server Version : 50617
  File Encoding         : 65001
 
- Date: 17/08/2021 18:27:13
+ Date: 23/08/2021 18:46:29
 */
 
 SET NAMES utf8mb4;
@@ -64,12 +64,44 @@ CREATE TABLE `day20210817`  (
 ) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Table structure for day20210820
+-- ----------------------------
+DROP TABLE IF EXISTS `day20210820`;
+CREATE TABLE `day20210820`  (
+  `ONLYNUM` int(11) NOT NULL AUTO_INCREMENT,
+  `VARIANTNAME` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `TIME` datetime(0) NULL DEFAULT NULL,
+  `DATA` double NULL DEFAULT NULL,
+  PRIMARY KEY (`ONLYNUM`) USING BTREE,
+  INDEX `day20210820_VARIANTNAME`(`VARIANTNAME`, `TIME`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Table structure for day20210823
+-- ----------------------------
+DROP TABLE IF EXISTS `day20210823`;
+CREATE TABLE `day20210823`  (
+  `ONLYNUM` int(11) NOT NULL AUTO_INCREMENT,
+  `VARIANTNAME` varchar(45) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `TIME` datetime(0) NULL DEFAULT NULL,
+  `DATA` double NULL DEFAULT NULL,
+  PRIMARY KEY (`ONLYNUM`) USING BTREE,
+  INDEX `day20210823_VARIANTNAME`(`VARIANTNAME`, `TIME`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
 -- Table structure for link_station_to_monitor
 -- ----------------------------
 DROP TABLE IF EXISTS `link_station_to_monitor`;
 CREATE TABLE `link_station_to_monitor`  (
+  `station_sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `device_sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of link_station_to_monitor
+-- ----------------------------
+INSERT INTO `link_station_to_monitor` VALUES ('s123', 'd123');
 
 -- ----------------------------
 -- Table structure for mon202108
@@ -95,7 +127,7 @@ CREATE TABLE `mon202108`  (
 -- ----------------------------
 DROP TABLE IF EXISTS `monitor_channel`;
 CREATE TABLE `monitor_channel`  (
-  `collector_id` int(11) NOT NULL,
+  `collector_id` int(11) NOT NULL AUTO_INCREMENT,
   `sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `ip_address` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
@@ -113,7 +145,12 @@ CREATE TABLE `monitor_channel`  (
   `online_time` datetime(0) NULL DEFAULT NULL,
   `update_time` datetime(0) NULL DEFAULT NULL,
   PRIMARY KEY (`collector_id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of monitor_channel
+-- ----------------------------
+INSERT INTO `monitor_channel` VALUES (1, 'dtu123', 'aaa', '192.168.1.147', '2406', '123456', 'TCPCLIENT', NULL, NULL, NULL, NULL, '0', NULL, NULL, '2021-08-20 09:44:14', NULL, '2021-08-23 18:46:11');
 
 -- ----------------------------
 -- Table structure for monitor_device
@@ -136,7 +173,12 @@ CREATE TABLE `monitor_device`  (
   `online_time` datetime(0) NULL DEFAULT NULL,
   `update_time` datetime(0) NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of monitor_device
+-- ----------------------------
+INSERT INTO `monitor_device` VALUES (1, 'd123', 'ddd', NULL, '0', NULL, NULL, NULL, '01', NULL, NULL, 'gateway_sn', '2021-08-23 18:07:21', '2021-08-23 18:02:26', '2021-08-23 18:46:11');
 
 -- ----------------------------
 -- Table structure for monitor_device_var
@@ -179,6 +221,11 @@ CREATE TABLE `monitor_device_var`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Records of monitor_device_var
+-- ----------------------------
+INSERT INTO `monitor_device_var` VALUES (1, 'd123', 'dtu123', 'd123', 'dvabc', NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL);
+
+-- ----------------------------
 -- Table structure for monitor_register
 -- ----------------------------
 DROP TABLE IF EXISTS `monitor_register`;
@@ -187,10 +234,34 @@ CREATE TABLE `monitor_register`  (
   `collector_device_sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   `start` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
-  `length` double NULL DEFAULT NULL,
+  `length` int(11) NULL DEFAULT NULL,
   `area` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of monitor_register
+-- ----------------------------
+INSERT INTO `monitor_register` VALUES (0, 'd123', NULL, NULL, NULL, NULL);
+
+-- ----------------------------
+-- Table structure for monitor_route
+-- ----------------------------
+DROP TABLE IF EXISTS `monitor_route`;
+CREATE TABLE `monitor_route`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `dtu_sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `protocol_type` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `protocol_params` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `parent_index` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of monitor_route
+-- ----------------------------
+INSERT INTO `monitor_route` VALUES (1, 'gateway_sn', 'dtu123', 'MODBUSTCP', NULL, NULL);
 
 -- ----------------------------
 -- Table structure for monitor_server
@@ -204,13 +275,48 @@ CREATE TABLE `monitor_server`  (
 ) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
+-- Records of monitor_server
+-- ----------------------------
+INSERT INTO `monitor_server` VALUES (1, '192.168.1.147', '2405');
+
+-- ----------------------------
 -- Table structure for station
 -- ----------------------------
 DROP TABLE IF EXISTS `station`;
 CREATE TABLE `station`  (
-  `id` int(11) NOT NULL,
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+) ENGINE = InnoDB AUTO_INCREMENT = 2 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
+
+-- ----------------------------
+-- Records of station
+-- ----------------------------
+INSERT INTO `station` VALUES (1, 's123');
+
+-- ----------------------------
+-- Table structure for tb_collector
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_collector`;
+CREATE TABLE `tb_collector`  (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `address` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `local_time` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL COMMENT '设备时间',
+  `name` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `report_connection_alarm` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `status` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `last_offline_report_id` int(11) NULL DEFAULT NULL,
+  `last_offline_report_time` datetime(0) NULL DEFAULT NULL,
+  `connection_timeout_duration` datetime(0) NULL DEFAULT NULL,
+  `is_device_being_used` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `parent_index` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `gateway_sn` varchar(255) CHARACTER SET utf8 COLLATE utf8_general_ci NULL DEFAULT NULL,
+  `offline_time` datetime(0) NULL DEFAULT NULL,
+  `online_time` datetime(0) NULL DEFAULT NULL,
+  `update_time` datetime(0) NULL DEFAULT NULL,
+  PRIMARY KEY (`id`) USING BTREE
+) ENGINE = InnoDB AUTO_INCREMENT = 1 CHARACTER SET = utf8 COLLATE = utf8_general_ci ROW_FORMAT = Compact;
 
 -- ----------------------------
 -- Table structure for unprocessed_data
